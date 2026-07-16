@@ -1,0 +1,19 @@
+{
+  "expo": {
+    "name": "Cozy Journal",
+    "slug": "cozy-journal",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "backgroundColor": "#FDFBF6"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": { "supportsTablet": true },
+    "android": {
+      "adaptiveIcon": { "backgroundColor": "#FDFBF6" },
+      "softwareKeyboardLayoutMode": "resize"
+    },
+    "web": { "bundler": "metro" }
+  }
+}
