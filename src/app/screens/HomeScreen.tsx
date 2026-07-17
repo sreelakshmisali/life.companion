@@ -23,6 +23,7 @@ import { TodoCard } from '@/features/todo/components/TodoCard';
 import { useTodos } from '@/features/todo/store/TodoProvider';
 import { SleepRitualCard } from '@/features/sleep/components/SleepRitualCard';
 import { useSleepRitual } from '@/features/sleep/store/SleepRitualProvider';
+import { OnThisDayCard } from '@/features/onThisDay/components/OnThisDayCard';
 import { TAB_BAR_CLEARANCE } from '../navigation/types';
 
 export function HomeScreen({
@@ -30,11 +31,13 @@ export function HomeScreen({
   onOpenMeditation,
   onOpenInsights,
   onOpenTodos,
+  onOpenOnThisDay,
 }: {
   onOpenMissions: () => void;
   onOpenMeditation: () => void;
   onOpenInsights: () => void;
   onOpenTodos: () => void;
+  onOpenOnThisDay: () => void;
 }) {
   const { theme } = useAppTheme();
   const { missions, toggleMission, currentStreak } = useMissions();
@@ -105,6 +108,7 @@ export function HomeScreen({
             onReroll={spark.reroll}
             ideas={spark.ideas}
           />
+          <OnThisDayCard onSeeAll={onOpenOnThisDay} />
         </View>
       </ScrollView>
     </View>

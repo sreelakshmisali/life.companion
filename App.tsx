@@ -24,6 +24,8 @@ import { QuotesProvider } from '@/features/quotes/store/QuotesProvider';
 import { SparkProvider } from '@/features/spark/store/SparkProvider';
 import { SleepRitualProvider } from '@/features/sleep/store/SleepRitualProvider';
 import { NotificationsProvider } from '@/features/notifications/store/NotificationsProvider';
+import { DailyArchiveProvider } from '@/features/onThisDay/store/DailyArchiveProvider';
+import { PersistenceGate } from '@/store/PersistenceGate';
 
 import { HomeScreen } from '@/app/screens/HomeScreen';
 import { MindScreen } from '@/app/screens/MindScreen';
@@ -32,6 +34,7 @@ import { MissionsScreen } from '@/features/missions/screens/MissionsScreen';
 import { MeditationScreen } from '@/features/meditation/screens/MeditationScreen';
 import { InsightsScreen } from '@/app/screens/InsightsScreen';
 import { TodoScreen } from '@/features/todo/screens/TodoScreen';
+import { OnThisDayScreen } from '@/features/onThisDay/screens/OnThisDayScreen';
 
 import { TabBar } from '@/app/navigation/TabBar';
 import { TabId, OverlayId } from '@/app/navigation/types';
@@ -58,6 +61,7 @@ function Root() {
             onOpenMeditation={() => setOverlay('meditation')}
             onOpenInsights={() => setOverlay('insights')}
             onOpenTodos={() => setOverlay('todos')}
+            onOpenOnThisDay={() => setOverlay('onThisDay')}
           />
         )}
         {tab === 'missions' && <MissionsScreen />}
@@ -73,6 +77,7 @@ function Root() {
       {overlay === 'meditation' && <MeditationScreen onBack={closeOverlay} />}
       {overlay === 'insights' && <InsightsScreen onBack={closeOverlay} />}
       {overlay === 'todos' && <TodoScreen onBack={closeOverlay} />}
+      {overlay === 'onThisDay' && <OnThisDayScreen onBack={closeOverlay} />}
 
       {!overlay && <TabBar active={tab} onChange={setTab} />}
     </View>
@@ -103,7 +108,11 @@ export default function App() {
                     <SparkProvider>
                       <SleepRitualProvider>
                         <NotificationsProvider>
-                          <Root />
+                          <DailyArchiveProvider>
+                            <PersistenceGate>
+                              <Root />
+                            </PersistenceGate>
+                          </DailyArchiveProvider>
                         </NotificationsProvider>
                       </SleepRitualProvider>
                     </SparkProvider>

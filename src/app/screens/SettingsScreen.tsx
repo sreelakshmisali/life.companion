@@ -25,6 +25,7 @@ import { useMissions } from '@/features/missions/store/MissionsProvider';
 import { useMood } from '@/features/mood/store/MoodProvider';
 import { useTodos } from '@/features/todo/store/TodoProvider';
 import { buildSnapshot, exportSnapshot, pickAndReadSnapshot } from '@/utils/appData';
+import { useAppSnapshot } from '@/store/useAppSnapshot';
 
 /** Collapsible-free, simple section wrapper so every block in this
  * screen — however different its content — reads as the same kind
@@ -67,7 +68,7 @@ function ToggleRow({ label, value, onChange, disabled }: { label: string; value:
 }
 
 export function SettingsScreen() {
-  const { theme, themeId } = useAppTheme();
+  const { theme } = useAppTheme();
   const notifications = useNotificationPrefs();
   const quotes = useQuotes();
   const spark = useSpark();
@@ -76,34 +77,13 @@ export function SettingsScreen() {
   const missions = useMissions();
   const mood = useMood();
   const todos = useTodos();
+  const { data: snapshotData, hydrateAll, resetAll } = useAppSnapshot();
 
   const [resetVisible, setResetVisible] = useState(false);
   const [importBusy, setImportBusy] = useState(false);
 
   const handleExport = async () => {
-    const snapshot = buildSnapshot({
-      themeId,
-      missions: missions.missions,
-      water: {
-        cups: water.cups,
-        reminderEnabled: water.reminderEnabled,
-        reminderIntervalMinutes: water.reminderIntervalMinutes,
-        reminderMessages: water.reminderMessages,
-      },
-      mood: mood.exportShape,
-      todos: todos.todos,
-      quotes: quotes.quotes,
-      sparkIdeas: spark.ideas,
-      sparkRerolledIdeaId: spark.rerolledIdeaId,
-      sleepChecklist: sleep.checklist,
-      sleepCompletedTonight: sleep.completedTonight,
-      notifications: {
-        missionsEnabled: notifications.missionsEnabled,
-        waterEnabled: notifications.waterEnabled,
-        meditationEnabled: notifications.meditationEnabled,
-        sleepEnabled: notifications.sleepEnabled,
-      },
-    });
+    const snapshot = buildSnapshot(snapshotData);
     try {
       await exportSnapshot(snapshot);
     } catch (e) {
@@ -119,17 +99,7 @@ export function SettingsScreen() {
         setImportBusy(false);
         return;
       }
-      const d = snapshot.data as any;
-      if (d.missions) missions.replaceAll(d.missions);
-      if (d.water) water.hydrate(d.water);
-      if (d.mood !== undefined) mood.replaceAll(d.mood);
-      if (d.todos) todos.replaceAll(d.todos);
-      if (d.quotes) quotes.replaceAll(d.quotes);
-      if (d.sparkIdeas) spark.replaceAll(d.sparkIdeas);
-      if (d.sparkRerolledIdeaId !== undefined) spark.replaceRerollState(d.sparkRerolledIdeaId);
-      if (d.sleepChecklist) sleep.replaceAll(d.sleepChecklist);
-      if (d.sleepCompletedTonight) sleep.replaceCompletedTonight(d.sleepCompletedTonight);
-      if (d.notifications) notifications.replaceAll(d.notifications);
+      hydrateAll(snapshot.data);
       Alert.alert('Backup restored', 'Your data has been imported.');
     } catch (e) {
       Alert.alert('Import failed', "That file couldn't be read as a Cozy Journal backup.");
@@ -139,21 +109,7 @@ export function SettingsScreen() {
   };
 
   const handleReset = () => {
-    missions.replaceAll([]);
-    water.hydrate({ cups: 0, reminderEnabled: true, reminderIntervalMinutes: 90, reminderMessages: [] });
-    mood.replaceAll(null);
-    todos.replaceAll([]);
-    quotes.replaceAll([]);
-    spark.replaceAll([]);
-    spark.replaceRerollState(null);
-    sleep.replaceAll([]);
-    sleep.replaceCompletedTonight([]);
-    notifications.replaceAll({
-      missionsEnabled: true,
-      waterEnabled: true,
-      meditationEnabled: true,
-      sleepEnabled: true,
-    });
+    resetAll();
     setResetVisible(false);
   };
 
@@ -264,7 +220,7 @@ export function SettingsScreen() {
       <ConfirmModal
         visible={resetVisible}
         title="Reset all data?"
-        message="This clears your missions, todos, water history, mood, quotes, and sleep checklist. This can't be undone — consider exporting a backup first."
+        message="This clears your missions, todos, water history, mood, quotes, sleep checklist, and On This Day memories. This can't be undone — consider exporting a backup first."
         confirmLabel="Reset everything"
         destructive
         onConfirm={handleReset}

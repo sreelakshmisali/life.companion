@@ -6,7 +6,7 @@ export type TabId = 'home' | 'missions' | 'mind' | 'settings';
  * tapping into them) render as a full-screen overlay on top of whichever
  * tab is currently active, rather than switching tabs themselves.
  */
-export type OverlayId = 'meditation' | 'insights' | 'todos' | null;
+export type OverlayId = 'meditation' | 'insights' | 'todos' | 'onThisDay' | null;
 
 /** Height reserved at the bottom of scrollable tab screens so content
  * never sits underneath the floating tab bar. */
