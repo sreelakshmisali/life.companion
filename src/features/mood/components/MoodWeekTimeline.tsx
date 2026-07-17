@@ -12,19 +12,33 @@ export function MoodWeekTimeline({ days }: { days: MoodDayEntry[] }) {
   return (
     <View style={styles.row}>
       {days.map((d) => {
-        const option = moodOptionFor(d.moodId);
+        const morning = moodOptionFor(d.morningMoodId);
+        const night = moodOptionFor(d.nightMoodId);
         return (
           <View key={d.dateKey} style={styles.col}>
-            <View
-              style={[
-                styles.bubble,
-                {
-                  backgroundColor: d.isToday ? theme.accentSoft : theme.surfaceAlt,
-                  borderColor: d.isToday ? theme.accent : 'transparent',
-                },
-              ]}
-            >
-              <Body style={{ fontSize: 18 }}>{option?.emoji ?? '·'}</Body>
+            <View style={styles.stack}>
+              <View
+                style={[
+                  styles.bubble,
+                  {
+                    backgroundColor: d.isToday ? theme.accentSoft : theme.surfaceAlt,
+                    borderColor: d.isToday ? theme.accent : 'transparent',
+                  },
+                ]}
+              >
+                <Body style={{ fontSize: 15 }}>{morning?.emoji ?? '·'}</Body>
+              </View>
+              <View
+                style={[
+                  styles.bubble,
+                  {
+                    backgroundColor: d.isToday ? theme.accentSoft : theme.surfaceAlt,
+                    borderColor: d.isToday ? theme.accent : 'transparent',
+                  },
+                ]}
+              >
+                <Body style={{ fontSize: 15 }}>{night?.emoji ?? '·'}</Body>
+              </View>
             </View>
             <Caption
               style={{ marginTop: 6, fontFamily: undefined }}
@@ -48,9 +62,12 @@ const styles = StyleSheet.create({
   col: {
     alignItems: 'center',
   },
+  stack: {
+    gap: 4,
+  },
   bubble: {
-    width: 36,
-    height: 36,
+    width: 28,
+    height: 28,
     borderRadius: radius.pill,
     borderWidth: 1.5,
     alignItems: 'center',

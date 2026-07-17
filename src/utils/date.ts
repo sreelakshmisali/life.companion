@@ -26,3 +26,10 @@ export function getLastNDays(count: number): Date[] {
   }
   return days;
 }
+
+/** 0-indexed day of the current year — used to deterministically pick
+ * "one thing per day" (quote of the day, today's spark) without needing
+ * any stored "last shown" state. */
+export function getDayOfYear(): number {
+  return Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000);
+}

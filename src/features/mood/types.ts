@@ -1,5 +1,7 @@
 export type MoodId = 'calm' | 'happy' | 'tired' | 'low' | 'excited';
 
+export type MoodPeriod = 'morning' | 'night';
+
 export interface MoodOption {
   id: MoodId;
   emoji: string;
@@ -9,6 +11,12 @@ export interface MoodOption {
 export interface MoodDayEntry {
   dateKey: string;
   label: string;
-  moodId: MoodId | null;
+  morningMoodId: MoodId | null;
+  nightMoodId: MoodId | null;
   isToday: boolean;
+}
+
+export interface MoodExportShape {
+  morningMood: MoodId | null;
+  nightMood: MoodId | null;
 }

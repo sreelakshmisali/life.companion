@@ -90,11 +90,13 @@ export function SettingsScreen() {
         reminderIntervalMinutes: water.reminderIntervalMinutes,
         reminderMessages: water.reminderMessages,
       },
-      mood: mood.mood,
+      mood: mood.exportShape,
       todos: todos.todos,
       quotes: quotes.quotes,
       sparkIdeas: spark.ideas,
+      sparkRerolledIdeaId: spark.rerolledIdeaId,
       sleepChecklist: sleep.checklist,
+      sleepCompletedTonight: sleep.completedTonight,
       notifications: {
         missionsEnabled: notifications.missionsEnabled,
         waterEnabled: notifications.waterEnabled,
@@ -124,7 +126,9 @@ export function SettingsScreen() {
       if (d.todos) todos.replaceAll(d.todos);
       if (d.quotes) quotes.replaceAll(d.quotes);
       if (d.sparkIdeas) spark.replaceAll(d.sparkIdeas);
+      if (d.sparkRerolledIdeaId !== undefined) spark.replaceRerollState(d.sparkRerolledIdeaId);
       if (d.sleepChecklist) sleep.replaceAll(d.sleepChecklist);
+      if (d.sleepCompletedTonight) sleep.replaceCompletedTonight(d.sleepCompletedTonight);
       if (d.notifications) notifications.replaceAll(d.notifications);
       Alert.alert('Backup restored', 'Your data has been imported.');
     } catch (e) {
@@ -141,7 +145,9 @@ export function SettingsScreen() {
     todos.replaceAll([]);
     quotes.replaceAll([]);
     spark.replaceAll([]);
+    spark.replaceRerollState(null);
     sleep.replaceAll([]);
+    sleep.replaceCompletedTonight([]);
     notifications.replaceAll({
       missionsEnabled: true,
       waterEnabled: true,

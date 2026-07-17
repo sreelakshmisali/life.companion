@@ -8,10 +8,11 @@ export const MOODS: MoodOption[] = [
   { id: 'excited', emoji: '✨', label: 'Excited' },
 ];
 
-export const DEFAULT_TODAY_MOOD: MoodId = 'calm';
+/** Mood logged each morning for the 6 days before today, oldest first. */
+export const MOCK_PAST_MORNING_MOODS: MoodId[] = ['happy', 'calm', 'tired', 'excited', 'calm', 'happy'];
 
-/** Mood logged on each of the 6 days before today, oldest first. */
-export const MOCK_PAST_MOODS: MoodId[] = ['happy', 'calm', 'tired', 'excited', 'calm', 'happy'];
+/** Mood logged each night for the 6 days before today, oldest first. */
+export const MOCK_PAST_NIGHT_MOODS: MoodId[] = ['calm', 'happy', 'calm', 'tired', 'excited', 'calm'];
 
 export function moodOptionFor(id: MoodId | null): MoodOption | undefined {
   if (!id) return undefined;

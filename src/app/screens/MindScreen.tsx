@@ -5,16 +5,21 @@ import { Feather } from '@expo/vector-icons';
 import { useAppTheme } from '@/theme/ThemeProvider';
 import { spacing } from '@/theme/tokens';
 import { AmbientOrb } from '@/components/common/AmbientOrb';
-import { Greeting, Title, Body, Caption } from '@/components/common/Type';
+import { Greeting, Title, Caption } from '@/components/common/Type';
 import { Card } from '@/components/cards/Card';
 import { MeditationCard } from '@/features/meditation/components/MeditationCard';
+import { MoodPicker } from '@/features/mood/components/MoodPicker';
+import { useMood } from '@/features/mood/store/MoodProvider';
+import { DailyQuotesCard } from '@/features/quotes/components/DailyQuotesCard';
+import { useQuotes } from '@/features/quotes/store/QuotesProvider';
+import { SleepRitualCard } from '@/features/sleep/components/SleepRitualCard';
+import { useSleepRitual } from '@/features/sleep/store/SleepRitualProvider';
 import { TAB_BAR_CLEARANCE } from '../navigation/types';
 
 /**
- * Phase 1 shell for the consolidated Mind tab. Mood, quotes, sleep ritual,
- * and history all move in here properly in Phase 4 — for now this hosts
- * Meditation and a link into the existing trends view so navigation has
- * a real home for everything the spec calls "mindfulness features."
+ * The consolidated Mind tab — everything the spec calls "mindfulness
+ * features" lives here: mood tracking (morning + night), meditation,
+ * daily quotes, the sleep ritual checklist, and a link into history.
  */
 export function MindScreen({
   onOpenMeditation,
@@ -24,6 +29,9 @@ export function MindScreen({
   onOpenInsights: () => void;
 }) {
   const { theme } = useAppTheme();
+  const mood = useMood();
+  const { quotes, quoteOfTheDay } = useQuotes();
+  const sleep = useSleepRitual();
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.background }}>
@@ -40,23 +48,38 @@ export function MindScreen({
         </View>
 
         <View style={styles.stack}>
+          <MoodPicker
+            period="morning"
+            selected={mood.morningMood}
+            onSelect={(id) => mood.setMood('morning', id)}
+            onSeeAll={onOpenInsights}
+          />
+          <MoodPicker
+            period="night"
+            selected={mood.nightMood}
+            onSelect={(id) => mood.setMood('night', id)}
+            onSeeAll={onOpenInsights}
+          />
+
           <MeditationCard onPress={onOpenMeditation} />
+
+          <DailyQuotesCard quoteOfTheDay={quoteOfTheDay} quotes={quotes} />
+
+          <SleepRitualCard
+            checklist={sleep.checklist}
+            completedTonight={sleep.completedTonight}
+            onToggleItem={sleep.toggleTonightItem}
+            currentStreak={sleep.currentStreak}
+          />
 
           <Card onPress={onOpenInsights}>
             <View style={styles.row}>
               <View style={{ flex: 1 }}>
-                <Title>Mood & water trends</Title>
-                <Caption style={{ marginTop: 2 }}>See your week at a glance</Caption>
+                <Title>Your history</Title>
+                <Caption style={{ marginTop: 2 }}>Water, mood, and sleep — your week at a glance</Caption>
               </View>
               <Feather name="chevron-right" size={20} color={theme.textSecondary} />
             </View>
-          </Card>
-
-          <Card>
-            <Title>More on the way</Title>
-            <Body style={{ marginTop: spacing.xs }}>
-              Daily quotes, sleep ritual, and mood history are moving in here soon.
-            </Body>
           </Card>
         </View>
       </ScrollView>

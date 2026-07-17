@@ -13,6 +13,7 @@ import { useMood } from '@/features/mood/store/MoodProvider';
 import { MoodWeekTimeline } from '@/features/mood/components/MoodWeekTimeline';
 import { MOODS } from '@/features/mood/constants';
 import { MoodId } from '@/features/mood/types';
+import { useSleepRitual } from '@/features/sleep/store/SleepRitualProvider';
 
 function averageCups(entries: { cups: number }[]) {
   if (entries.length === 0) return 0;
@@ -20,13 +21,33 @@ function averageCups(entries: { cups: number }[]) {
   return Math.round((sum / entries.length) * 10) / 10;
 }
 
+/**
+ * A gentle, plain-language pattern spotted across this week's data — not a
+ * statistical claim, just a nudge in the direction the numbers lean.
+ */
+function buildWeeklyInsight(
+  waterHistory: { cups: number }[],
+  goal: number,
+  sleepHistory: { completedCount: number; totalCount: number }[]
+): string | null {
+  const daysHitWaterGoal = waterHistory.filter((d) => d.cups >= goal).length;
+  const fullSleepNights = sleepHistory.filter((d) => d.totalCount > 0 && d.completedCount >= d.totalCount).length;
+
+  if (fullSleepNights >= 5) return 'Your sleep ritual is nearly a daily habit this week — lovely consistency.';
+  if (daysHitWaterGoal >= 5) return "You've been hitting your water goal most days this week. Keep it flowing.";
+  if (fullSleepNights >= 3 && daysHitWaterGoal >= 3) return 'You tend to sleep better on days you also stay hydrated.';
+  return null;
+}
+
 export function InsightsScreen({ onBack }: { onBack: () => void }) {
   const { theme } = useAppTheme();
   const water = useWater();
   const mood = useMood();
+  const sleep = useSleepRitual();
 
   const weeklyAverage = averageCups(water.weekHistory);
   const daysHitGoal = water.weekHistory.filter((d) => d.cups >= water.goal).length;
+  const insight = buildWeeklyInsight(water.weekHistory, water.goal, sleep.weekHistory);
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.background }}>
@@ -37,7 +58,7 @@ export function InsightsScreen({ onBack }: { onBack: () => void }) {
           <Feather name="arrow-left" size={18} color={theme.textPrimary} />
         </IconButton>
         <View style={{ flex: 1, marginLeft: spacing.sm }}>
-          <Greeting style={{ fontSize: 26, lineHeight: 32 }}>Water & mood</Greeting>
+          <Greeting style={{ fontSize: 26, lineHeight: 32 }}>Your history</Greeting>
           <Caption style={{ marginTop: 2 }}>Your last 7 days</Caption>
         </View>
       </View>
@@ -79,27 +100,73 @@ export function InsightsScreen({ onBack }: { onBack: () => void }) {
         {/* ── Mood ────────────────────────────────── */}
         <Card style={{ marginTop: spacing.md }}>
           <Title>Mood</Title>
-          <Caption style={{ marginTop: 2 }}>This week</Caption>
+          <Caption style={{ marginTop: 2 }}>Morning (top) and night (bottom), this week</Caption>
 
           <MoodWeekTimeline days={mood.weekHistory} />
 
+          <Caption style={{ marginTop: spacing.md }}>Morning</Caption>
           <View style={styles.moodPickRow}>
             {MOODS.map((m) => {
-              const selected = mood.mood === m.id;
+              const selected = mood.morningMood === m.id;
               return (
                 <IconButton
                   key={m.id}
-                  onPress={() => mood.setMood(m.id as MoodId)}
-                  size={44}
+                  onPress={() => mood.setMood('morning', m.id as MoodId)}
+                  size={40}
                   backgroundColor={selected ? theme.accentSoft : 'transparent'}
                   borderColor={selected ? theme.accent : theme.border}
                 >
-                  <Body style={{ fontSize: 18 }}>{m.emoji}</Body>
+                  <Body style={{ fontSize: 16 }}>{m.emoji}</Body>
+                </IconButton>
+              );
+            })}
+          </View>
+
+          <Caption style={{ marginTop: spacing.sm }}>Night</Caption>
+          <View style={styles.moodPickRow}>
+            {MOODS.map((m) => {
+              const selected = mood.nightMood === m.id;
+              return (
+                <IconButton
+                  key={m.id}
+                  onPress={() => mood.setMood('night', m.id as MoodId)}
+                  size={40}
+                  backgroundColor={selected ? theme.accentSoft : 'transparent'}
+                  borderColor={selected ? theme.accent : theme.border}
+                >
+                  <Body style={{ fontSize: 16 }}>{m.emoji}</Body>
                 </IconButton>
               );
             })}
           </View>
         </Card>
+
+        {/* ── Sleep ritual ────────────────────────── */}
+        <Card style={{ marginTop: spacing.md }}>
+          <View style={styles.rowHeader}>
+            <Title>Sleep ritual</Title>
+            <Caption>{sleep.currentStreak > 0 ? `🔥 ${sleep.currentStreak} night streak` : 'This week'}</Caption>
+          </View>
+
+          <WeeklyBarChart
+            data={sleep.weekHistory.map((d) => ({
+              label: d.label,
+              value: d.completedCount,
+              isToday: d.isToday,
+            }))}
+            maxValue={Math.max(1, ...sleep.weekHistory.map((d) => d.totalCount))}
+          />
+        </Card>
+
+        {/* ── Insight ─────────────────────────────── */}
+        {insight && (
+          <Card style={{ marginTop: spacing.md, backgroundColor: theme.surfaceAlt }}>
+            <View style={styles.row}>
+              <Body>✨</Body>
+              <Body style={{ marginLeft: spacing.xs, flex: 1 }}>{insight}</Body>
+            </View>
+          </Card>
+        )}
       </ScrollView>
     </View>
   );
@@ -121,6 +188,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   statsRow: {
     flexDirection: 'row',

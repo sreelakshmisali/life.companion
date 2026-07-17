@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useMemo, useState } from 'react';
+import { getDayOfYear } from '@/utils/date';
 import { DEFAULT_QUOTES } from '../constants';
 import { QuoteItem } from '../types';
 
@@ -19,9 +20,7 @@ export function QuotesProvider({ children }: { children: React.ReactNode }) {
   const value = useMemo<QuotesContextValue>(() => {
     // Deterministic pick per day-of-year so it stays the same all day
     // and rotates tomorrow, without needing any stored "last shown" state.
-    const dayOfYear = Math.floor(
-      (Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000
-    );
+    const dayOfYear = getDayOfYear();
     const quoteOfTheDay = quotes.length > 0 ? quotes[dayOfYear % quotes.length] : null;
 
     return {

@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import {
   Animated,
   KeyboardAvoidingView,
@@ -13,12 +13,14 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Feather } from '@expo/vector-icons';
 import { useAppTheme } from '@/theme/ThemeProvider';
 import { spacing, radius, buttonHeight, typography } from '@/theme/tokens';
-import { Greeting, Body, Caption } from '@/components/common/Type';
+import { Greeting, Title, Body, Caption } from '@/components/common/Type';
 import { Card } from '@/components/cards/Card';
 import { EmptyState } from '@/components/common/EmptyState';
 import { IconButton } from '@/components/buttons/IconButton';
 import { useMissions } from '../store/MissionsProvider';
 import { Mission } from '../types';
+import { computeMissionStats } from '../utils';
+import { MissionMonthGrid } from '../components/MissionMonthGrid';
 import { TAB_BAR_CLEARANCE } from '@/app/navigation/types';
 
 function MissionRow({
@@ -26,17 +28,23 @@ function MissionRow({
   onToggle,
   onSave,
   onDelete,
+  expanded,
+  onToggleExpand,
 }: {
   mission: Mission;
   onToggle: () => void;
   onSave: (label: string) => void;
   onDelete: () => void;
+  expanded: boolean;
+  onToggleExpand: () => void;
 }) {
   const { theme } = useAppTheme();
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(mission.label);
   const revealX = useRef(new Animated.Value(0)).current;
   const [revealed, setRevealed] = useState(false);
+
+  const stats = useMemo(() => computeMissionStats(mission.id, mission.done), [mission.id, mission.done]);
 
   const toggleReveal = () => {
     const next = !revealed;
@@ -108,10 +116,35 @@ function MissionRow({
           </Pressable>
         )}
 
+        {stats.currentStreak > 0 && (
+          <Caption color={theme.accent} style={{ marginRight: 2 }}>
+            🔥{stats.currentStreak}
+          </Caption>
+        )}
+
+        <Pressable onPress={onToggleExpand} hitSlop={8}>
+          <Feather name={expanded ? 'chevron-up' : 'chevron-down'} size={18} color={theme.textSecondary} />
+        </Pressable>
         <Pressable onPress={toggleReveal} hitSlop={8}>
           <Feather name="more-horizontal" size={18} color={theme.textSecondary} />
         </Pressable>
       </Animated.View>
+
+      {expanded && (
+        <View style={[styles.detailPanel, { backgroundColor: theme.surface }]}>
+          <View style={styles.statsRow}>
+            <View style={styles.statBlock}>
+              <Title style={{ fontSize: 20, lineHeight: 26 }}>{stats.currentStreak}</Title>
+              <Caption>Current streak</Caption>
+            </View>
+            <View style={styles.statBlock}>
+              <Title style={{ fontSize: 20, lineHeight: 26 }}>{stats.bestStreak}</Title>
+              <Caption>Best streak</Caption>
+            </View>
+          </View>
+          <MissionMonthGrid doneByDate={stats.doneByDate} />
+        </View>
+      )}
     </View>
   );
 }
@@ -120,6 +153,7 @@ export function MissionsScreen({ onBack }: { onBack?: () => void }) {
   const { theme } = useAppTheme();
   const { missions, toggleMission, addMission, editMission, removeMission } = useMissions();
   const [draft, setDraft] = useState('');
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const doneCount = missions.filter((m) => m.done).length;
 
@@ -174,6 +208,8 @@ export function MissionsScreen({ onBack }: { onBack?: () => void }) {
                   onToggle={() => toggleMission(m.id)}
                   onSave={(label) => editMission(m.id, label)}
                   onDelete={() => removeMission(m.id)}
+                  expanded={expandedId === m.id}
+                  onToggleExpand={() => setExpandedId((cur) => (cur === m.id ? null : m.id))}
                 />
               ))}
             </View>
@@ -245,6 +281,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  detailPanel: {
+    marginTop: 4,
+    padding: spacing.sm,
+    borderRadius: radius.lg,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    gap: spacing.lg,
+    marginBottom: spacing.sm,
+  },
+  statBlock: {},
   editInput: {
     flex: 1,
     fontSize: typography.size.body,

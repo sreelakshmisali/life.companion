@@ -5,7 +5,7 @@ import { Title, Caption } from '@/components/common/Type';
 import { useAppTheme } from '@/theme/ThemeProvider';
 import { spacing, radius } from '@/theme/tokens';
 import { MOODS } from '../constants';
-import { MoodId } from '../types';
+import { MoodId, MoodPeriod } from '../types';
 
 function MoodBubble({
   emoji,
@@ -45,20 +45,27 @@ function MoodBubble({
   );
 }
 
+const PERIOD_TITLES: Record<MoodPeriod, string> = {
+  morning: 'Morning mood',
+  night: 'Night mood',
+};
+
 export function MoodPicker({
   selected,
   onSelect,
   onSeeAll,
+  period,
 }: {
   selected: MoodId | null;
   onSelect: (id: MoodId) => void;
   onSeeAll?: () => void;
+  period?: MoodPeriod;
 }) {
   const { theme } = useAppTheme();
   return (
     <Card>
       <View style={styles.header}>
-        <Title>How are you feeling?</Title>
+        <Title>{period ? PERIOD_TITLES[period] : 'How are you feeling?'}</Title>
         {onSeeAll && (
           <Pressable onPress={onSeeAll} hitSlop={8}>
             <Caption color={theme.accent}>See trends</Caption>
