@@ -7,12 +7,15 @@ import { EmptyState } from '@/components/common/EmptyState';
 import { PetalConfetti } from '@/components/common/PetalConfetti';
 import { useAppTheme } from '@/theme/ThemeProvider';
 import { spacing, radius } from '@/theme/tokens';
+import { toDateKey } from '@/utils/date';
 import type { Mission } from '../types';
 
 export type { Mission };
 
 function MissionRow({ mission, onToggle }: { mission: Mission; onToggle: () => void }) {
   const { theme } = useAppTheme();
+  const todayKey = toDateKey(new Date());
+  const done = mission.completedDates.includes(todayKey);
   const ripple = useRef(new Animated.Value(0)).current;
 
   const handlePress = () => {
@@ -38,23 +41,23 @@ function MissionRow({ mission, onToggle }: { mission: Mission; onToggle: () => v
             },
           ]}
         />
-        <View
+      <View
           style={[
             styles.checkbox,
             {
-              borderColor: mission.done ? theme.accent : theme.border,
-              backgroundColor: mission.done ? theme.accent : 'transparent',
+              borderColor: done ? theme.accent : theme.border,
+              backgroundColor: done ? theme.accent : 'transparent',
             },
           ]}
         >
-          {mission.done && <Feather name="check" size={14} color={theme.textOnAccent} />}
+          {done && <Feather name="check" size={14} color={theme.textOnAccent} />}
         </View>
       </View>
       <Body
-        style={{ flex: 1, textDecorationLine: mission.done ? 'line-through' : 'none' }}
-        color={mission.done ? theme.textSecondary : theme.textPrimary}
+        style={{ flex: 1, textDecorationLine: done ? 'line-through' : 'none' }}
+        color={done ? theme.textSecondary : theme.textPrimary}
       >
-        {mission.label}
+        {mission.title}
       </Body>
     </Pressable>
   );
@@ -70,7 +73,8 @@ export function MissionsCard({
   onSeeAll?: () => void;
 }) {
   const { theme } = useAppTheme();
-  const doneCount = missions.filter((m) => m.done).length;
+  const todayKey = toDateKey(new Date());
+  const doneCount = missions.filter((m) => m.completedDates.includes(todayKey)).length;
   const allDone = missions.length > 0 && doneCount === missions.length;
   const [showConfetti, setShowConfetti] = useState(false);
   const prevAllDone = useRef(false);

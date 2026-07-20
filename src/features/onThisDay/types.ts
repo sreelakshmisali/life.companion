@@ -1,15 +1,14 @@
-import { MoodId } from '@/features/mood/types';
-
 /** A frozen summary of one real day, written once that day happens and
  * never rewritten afterward (except to keep "today"'s own slot current). */
 export interface DailyArchiveEntry {
   dateKey: string;
+  missionsEnabled: boolean;
   missionsTotal: number;
   missionsDone: number;
-  morningMoodId: MoodId | null;
-  nightMoodId: MoodId | null;
+  waterEnabled: boolean;
   waterCups: number;
   waterGoal: number;
+  sleepEnabled: boolean;
   sleepCompleted: number;
   sleepTotal: number;
   quote: { quote: string; author: string } | null;

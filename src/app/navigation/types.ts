@@ -1,4 +1,4 @@
-export type TabId = 'home' | 'missions' | 'mind' | 'settings';
+export type TabId = 'home' | 'missions' | 'meditate' | 'settings';
 
 /**
  * Screens that aren't tabs of their own (per the spec: Todo, Meditation,

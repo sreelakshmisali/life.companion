@@ -2,10 +2,10 @@ import React, { createContext, useContext, useEffect, useMemo, useState } from '
 import { toDateKey } from '@/utils/date';
 import { useMissions } from '@/features/missions/store/MissionsProvider';
 import { useWater } from '@/features/water/store/WaterProvider';
-import { useMood } from '@/features/mood/store/MoodProvider';
 import { useSleepRitual } from '@/features/sleep/store/SleepRitualProvider';
 import { useQuotes } from '@/features/quotes/store/QuotesProvider';
 import { useSpark } from '@/features/spark/store/SparkProvider';
+import { useDailyRoutine } from '@/features/settings/store/DailyRoutineProvider';
 import { DailyArchive, DailyArchiveEntry } from '../types';
 
 interface DailyArchiveContextValue {
@@ -20,12 +20,13 @@ const DailyArchiveContext = createContext<DailyArchiveContextValue | undefined>(
 function sameEntry(a: DailyArchiveEntry | undefined, b: DailyArchiveEntry): boolean {
   if (!a) return false;
   return (
+    a.missionsEnabled === b.missionsEnabled &&
     a.missionsTotal === b.missionsTotal &&
     a.missionsDone === b.missionsDone &&
-    a.morningMoodId === b.morningMoodId &&
-    a.nightMoodId === b.nightMoodId &&
+    a.waterEnabled === b.waterEnabled &&
     a.waterCups === b.waterCups &&
     a.waterGoal === b.waterGoal &&
+    a.sleepEnabled === b.sleepEnabled &&
     a.sleepCompleted === b.sleepCompleted &&
     a.sleepTotal === b.sleepTotal &&
     a.quote?.quote === b.quote?.quote &&
@@ -39,30 +40,31 @@ function sameEntry(a: DailyArchiveEntry | undefined, b: DailyArchiveEntry): bool
  * a day with no entry simply means the app wasn't used that day, and "On
  * This Day" is honest about that rather than making something up.
  *
- * Must be mounted inside Missions/Water/Mood/Sleep/Quotes/Spark providers
- * (it reads from all of them) and outside PersistenceGate (so its archive
- * state is included in the snapshot that gets hydrated/autosaved).
+ * Must be mounted inside Missions/Water/Sleep/Quotes/Spark providers
+ * and outside PersistenceGate (so its archive state is included in the
+ * snapshot that gets hydrated/autosaved).
  */
 export function DailyArchiveProvider({ children }: { children: React.ReactNode }) {
   const [archive, setArchive] = useState<DailyArchive>({});
   const missions = useMissions();
   const water = useWater();
-  const mood = useMood();
   const sleep = useSleepRitual();
   const quotes = useQuotes();
   const spark = useSpark();
+  const dailyRoutine = useDailyRoutine();
 
   const todayKey = toDateKey(new Date());
 
   const todayEntry = useMemo<DailyArchiveEntry>(
     () => ({
       dateKey: todayKey,
+      missionsEnabled: dailyRoutine.missionsEnabled,
       missionsTotal: missions.missions.length,
-      missionsDone: missions.missions.filter((m) => m.done).length,
-      morningMoodId: mood.morningMood,
-      nightMoodId: mood.nightMood,
+      missionsDone: missions.missions.filter((m) => m.completedDates.includes(todayKey)).length,
+      waterEnabled: dailyRoutine.waterEnabled,
       waterCups: water.cups,
       waterGoal: water.goal,
+      sleepEnabled: dailyRoutine.sleepEnabled,
       sleepCompleted: sleep.completedTonight.length,
       sleepTotal: sleep.checklist.length,
       quote: quotes.quoteOfTheDay
@@ -73,14 +75,15 @@ export function DailyArchiveProvider({ children }: { children: React.ReactNode }
     [
       todayKey,
       missions.missions,
-      mood.morningMood,
-      mood.nightMood,
       water.cups,
       water.goal,
       sleep.completedTonight,
       sleep.checklist,
       quotes.quoteOfTheDay,
       spark.todaysSpark,
+      dailyRoutine.missionsEnabled,
+      dailyRoutine.waterEnabled,
+      dailyRoutine.sleepEnabled,
     ]
   );
 

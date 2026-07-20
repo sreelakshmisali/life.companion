@@ -1,11 +1,12 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { Animated, Pressable, View, StyleSheet } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { Card } from '@/components/cards/Card';
 import { Title, Body, Caption } from '@/components/common/Type';
 import { useAppTheme } from '@/theme/ThemeProvider';
 import { spacing, radius } from '@/theme/tokens';
-import { SleepChecklistItem } from '../types';
+import { SleepChecklistItem, SleepNightEntry } from '../types';
+import { WeeklyBarChart } from '@/components/common/WeeklyBarChart';
 
 function CheckRow({
   item,
@@ -48,46 +49,48 @@ function CheckRow({
   );
 }
 
-/**
- * The bedtime checklist itself — separate from Settings' template editor,
- * this is what the user actually taps through each night. Lives on the
- * Home screen (evening) and in Mind.
- */
 export function SleepRitualCard({
   checklist,
   completedTonight,
   onToggleItem,
-  currentStreak,
+  weekHistory,
 }: {
   checklist: SleepChecklistItem[];
   completedTonight: string[];
   onToggleItem: (id: string) => void;
-  currentStreak: number;
+  weekHistory: SleepNightEntry[];
 }) {
   const { theme } = useAppTheme();
+  const [trendsExpanded, setTrendsExpanded] = useState(false);
+  
   const done = completedTonight.length;
   const total = checklist.length;
   const allDone = total > 0 && done === total;
 
+  const isEvening = new Date().getHours() >= 18;
+  const title = isEvening ? 'Sleep ritual' : "Tonight's ritual";
+  
+  let subtitle = '';
+  if (total === 0) {
+    subtitle = 'Add ritual items in Settings to get started.';
+  } else if (allDone) {
+    subtitle = 'All set for a cozy night 🌙';
+  } else if (isEvening) {
+    subtitle = `Your evening ritual is ready 🌙 (${done}/${total})`;
+  } else {
+    subtitle = `${done} of ${total} done`;
+  }
+
   return (
     <Card>
       <View style={styles.header}>
-        <View>
-          <Title>Sleep ritual</Title>
-          <Caption style={{ marginTop: 2 }}>
-            {allDone ? 'All set for a cozy night 🌙' : `${done} of ${total} done`}
-          </Caption>
+        <View style={{ flex: 1 }}>
+          <Title>{title}</Title>
+          <Caption style={{ marginTop: 2 }}>{subtitle}</Caption>
         </View>
-        {currentStreak > 0 && (
-          <View style={[styles.streakChip, { backgroundColor: theme.accentSoft }]}>
-            <Caption color={theme.accent}>🔥 {currentStreak}</Caption>
-          </View>
-        )}
       </View>
 
-      {total === 0 ? (
-        <Caption style={{ marginTop: spacing.sm }}>Add ritual items in Settings to get started.</Caption>
-      ) : (
+      {total > 0 && (
         <View style={styles.list}>
           {checklist.map((item) => (
             <CheckRow
@@ -97,6 +100,33 @@ export function SleepRitualCard({
               onToggle={() => onToggleItem(item.id)}
             />
           ))}
+        </View>
+      )}
+
+      {total > 0 && (
+        <View style={{ marginTop: spacing.md }}>
+          {trendsExpanded ? (
+            <View style={styles.trendsPanel}>
+              <View style={styles.trendsHeader}>
+                <Caption color={theme.accent}>Sleep trends</Caption>
+                <Pressable onPress={() => setTrendsExpanded(false)} hitSlop={8}>
+                  <Feather name="chevron-up" size={18} color={theme.textSecondary} />
+                </Pressable>
+              </View>
+              <WeeklyBarChart
+                data={weekHistory.map((d) => ({
+                  label: d.label,
+                  value: d.completedCount,
+                  isToday: d.isToday,
+                }))}
+                maxValue={Math.max(1, ...weekHistory.map((d) => d.totalCount))}
+              />
+            </View>
+          ) : (
+            <Pressable onPress={() => setTrendsExpanded(true)} hitSlop={8} style={{ alignSelf: 'flex-end' }}>
+              <Caption color={theme.accent}>See sleep trends</Caption>
+            </Pressable>
+          )}
         </View>
       )}
     </Card>
@@ -109,11 +139,6 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     justifyContent: 'space-between',
   },
-  streakChip: {
-    paddingHorizontal: spacing.xs,
-    paddingVertical: 4,
-    borderRadius: radius.pill,
-  },
   list: {
     marginTop: spacing.sm,
     gap: spacing.xs,
@@ -121,6 +146,7 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
+    paddingVertical: 2,
   },
   checkbox: {
     width: 22,
@@ -129,5 +155,16 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  trendsPanel: {
+    paddingTop: spacing.xs,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderColor: '#E5E5E5', // approximate, or use theme.border if accessible in styles
+  },
+  trendsHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing.sm,
   },
 });

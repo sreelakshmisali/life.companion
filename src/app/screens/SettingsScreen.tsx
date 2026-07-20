@@ -22,8 +22,8 @@ import { useWater } from '@/features/water/store/WaterProvider';
 import { REMINDER_INTERVAL_OPTIONS } from '@/features/water/constants';
 import { useSleepRitual } from '@/features/sleep/store/SleepRitualProvider';
 import { useMissions } from '@/features/missions/store/MissionsProvider';
-import { useMood } from '@/features/mood/store/MoodProvider';
 import { useTodos } from '@/features/todo/store/TodoProvider';
+import { useDailyRoutine } from '@/features/settings/store/DailyRoutineProvider';
 import { buildSnapshot, exportSnapshot, pickAndReadSnapshot } from '@/utils/appData';
 import { useAppSnapshot } from '@/store/useAppSnapshot';
 
@@ -75,8 +75,8 @@ export function SettingsScreen() {
   const water = useWater();
   const sleep = useSleepRitual();
   const missions = useMissions();
-  const mood = useMood();
   const todos = useTodos();
+  const dailyRoutine = useDailyRoutine();
   const { data: snapshotData, hydrateAll, resetAll } = useAppSnapshot();
 
   const [resetVisible, setResetVisible] = useState(false);
@@ -126,6 +126,12 @@ export function SettingsScreen() {
         <View style={styles.stack}>
           <Section icon="feather" title="Appearance" subtitle="Switching themes never touches your data">
             <ThemePicker />
+          </Section>
+
+          <Section icon="check-square" title="Daily Routine" subtitle="Choose what counts towards your streak">
+            <ToggleRow label="Missions" value={dailyRoutine.missionsEnabled} onChange={dailyRoutine.setMissionsEnabled} />
+            <ToggleRow label="Water Tracking" value={dailyRoutine.waterEnabled} onChange={dailyRoutine.setWaterEnabled} />
+            <ToggleRow label="Sleep Ritual" value={dailyRoutine.sleepEnabled} onChange={dailyRoutine.setSleepEnabled} />
           </Section>
 
           <Section icon="bell" title="Notifications" subtitle="Preferences for now — real reminders are coming soon">
@@ -220,7 +226,7 @@ export function SettingsScreen() {
       <ConfirmModal
         visible={resetVisible}
         title="Reset all data?"
-        message="This clears your missions, todos, water history, mood, quotes, sleep checklist, and On This Day memories. This can't be undone — consider exporting a backup first."
+        message="This clears your missions, todos, water history, quotes, spark ideas, sleep checklist, and On This Day memories. This can't be undone — consider exporting a backup first."
         confirmLabel="Reset everything"
         destructive
         onConfirm={handleReset}

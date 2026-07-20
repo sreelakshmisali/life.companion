@@ -21,8 +21,8 @@ const TABS: TabDef[] = [
     renderIcon: (color, size) => <Feather name="check-circle" size={size} color={color} />,
   },
   {
-    id: 'mind',
-    label: 'Mind',
+    id: 'meditate',
+    label: 'Meditate',
     renderIcon: (color, size) => <MaterialCommunityIcons name="meditation" size={size} color={color} />,
   },
   {

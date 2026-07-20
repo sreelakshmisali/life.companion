@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useMemo, useState } from 'react';
 import { getLastNDays, toDateKey, getWeekdayLabel } from '@/utils/date';
-import { DEFAULT_SLEEP_CHECKLIST, MOCK_PAST_SLEEP_COMPLETION } from '../constants';
+import { DEFAULT_SLEEP_CHECKLIST } from '../constants';
 import { SleepChecklistItem, SleepNightEntry } from '../types';
 
 interface SleepContextValue {
@@ -13,7 +13,6 @@ interface SleepContextValue {
   toggleTonightItem: (id: string) => void;
   replaceCompletedTonight: (ids: string[]) => void;
   weekHistory: SleepNightEntry[];
-  currentStreak: number;
 }
 
 const SleepContext = createContext<SleepContextValue | undefined>(undefined);
@@ -23,32 +22,21 @@ export function SleepRitualProvider({ children }: { children: React.ReactNode })
   const [completedTonight, setCompletedTonight] = useState<string[]>([]);
 
   const value = useMemo<SleepContextValue>(() => {
-    const days = getLastNDays(7); // includes today, oldest first
+    const days = getLastNDays(7);
     const tonightRatio = checklist.length > 0 ? completedTonight.length / checklist.length : 0;
 
+    // Past days default to 0 completion — no fake data.
+    // Real history will come from DailyArchive once analytics are built.
     const weekHistory: SleepNightEntry[] = days.map((d, i) => {
       const isToday = i === days.length - 1;
-      const ratio = isToday ? tonightRatio : MOCK_PAST_SLEEP_COMPLETION[i] ?? 0;
       return {
         dateKey: toDateKey(d),
         label: getWeekdayLabel(d),
-        completedCount: Math.round(ratio * checklist.length),
+        completedCount: isToday ? Math.round(tonightRatio * checklist.length) : 0,
         totalCount: checklist.length,
         isToday,
       };
     });
-
-    // Count consecutive fully-completed nights, most recent first (today doesn't
-    // break the streak until it's actually incomplete at ritual time).
-    let currentStreak = 0;
-    for (let i = weekHistory.length - 1; i >= 0; i--) {
-      const night = weekHistory[i];
-      if (night.totalCount > 0 && night.completedCount >= night.totalCount) {
-        currentStreak += 1;
-      } else if (!night.isToday) {
-        break;
-      }
-    }
 
     return {
       checklist,
@@ -72,7 +60,6 @@ export function SleepRitualProvider({ children }: { children: React.ReactNode })
         setCompletedTonight((prev) => (prev.includes(id) ? prev.filter((cid) => cid !== id) : [...prev, id])),
       replaceCompletedTonight: (ids: string[]) => setCompletedTonight(ids),
       weekHistory,
-      currentStreak,
     };
   }, [checklist, completedTonight]);
 

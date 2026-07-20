@@ -18,7 +18,6 @@ import {
 import { ThemeProvider, useAppTheme } from '@/theme/ThemeProvider';
 import { MissionsProvider } from '@/features/missions/store/MissionsProvider';
 import { WaterProvider } from '@/features/water/store/WaterProvider';
-import { MoodProvider } from '@/features/mood/store/MoodProvider';
 import { TodoProvider } from '@/features/todo/store/TodoProvider';
 import { QuotesProvider } from '@/features/quotes/store/QuotesProvider';
 import { SparkProvider } from '@/features/spark/store/SparkProvider';
@@ -28,18 +27,18 @@ import { DailyArchiveProvider } from '@/features/onThisDay/store/DailyArchivePro
 import { PersistenceGate } from '@/store/PersistenceGate';
 
 import { HomeScreen } from '@/app/screens/HomeScreen';
-import { MindScreen } from '@/app/screens/MindScreen';
 import { SettingsScreen } from '@/app/screens/SettingsScreen';
 import { MissionsScreen } from '@/features/missions/screens/MissionsScreen';
 import { MeditationScreen } from '@/features/meditation/screens/MeditationScreen';
-import { InsightsScreen } from '@/app/screens/InsightsScreen';
 import { TodoScreen } from '@/features/todo/screens/TodoScreen';
-import { OnThisDayScreen } from '@/features/onThisDay/screens/OnThisDayScreen';
 
 import { TabBar } from '@/app/navigation/TabBar';
 import { TabId, OverlayId } from '@/app/navigation/types';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
+
+import { StreakProvider } from '@/features/streak/store/StreakProvider';
+import { DailyRoutineProvider } from '@/features/settings/store/DailyRoutineProvider';
 
 function Root() {
   const { theme } = useAppTheme();
@@ -58,26 +57,20 @@ function Root() {
         {tab === 'home' && (
           <HomeScreen
             onOpenMissions={() => setTab('missions')}
-            onOpenMeditation={() => setOverlay('meditation')}
-            onOpenInsights={() => setOverlay('insights')}
+            onOpenMeditation={() => setTab('meditate')}
             onOpenTodos={() => setOverlay('todos')}
-            onOpenOnThisDay={() => setOverlay('onThisDay')}
+            onOpenSettings={() => setTab('settings')}
           />
         )}
         {tab === 'missions' && <MissionsScreen />}
-        {tab === 'mind' && (
-          <MindScreen onOpenMeditation={() => setOverlay('meditation')} onOpenInsights={() => setOverlay('insights')} />
-        )}
+        {tab === 'meditate' && <MeditationScreen />}
         {tab === 'settings' && <SettingsScreen />}
       </View>
 
-      {/* Screens that aren't tabs of their own (Todo, Meditation, trends)
+      {/* Screens that aren't tabs of their own (Todo, trends)
           render as a full-screen takeover on top of whichever tab is
           active, and hide the tab bar while open. */}
-      {overlay === 'meditation' && <MeditationScreen onBack={closeOverlay} />}
-      {overlay === 'insights' && <InsightsScreen onBack={closeOverlay} />}
       {overlay === 'todos' && <TodoScreen onBack={closeOverlay} />}
-      {overlay === 'onThisDay' && <OnThisDayScreen onBack={closeOverlay} />}
 
       {!overlay && <TabBar active={tab} onChange={setTab} />}
     </View>
@@ -102,23 +95,25 @@ export default function App() {
         <ThemeProvider>
           <MissionsProvider>
             <WaterProvider>
-              <MoodProvider>
-                <TodoProvider>
+              <TodoProvider>
                   <QuotesProvider>
                     <SparkProvider>
                       <SleepRitualProvider>
                         <NotificationsProvider>
-                          <DailyArchiveProvider>
-                            <PersistenceGate>
-                              <Root />
-                            </PersistenceGate>
-                          </DailyArchiveProvider>
+                          <DailyRoutineProvider>
+                            <DailyArchiveProvider>
+                              <StreakProvider>
+                                <PersistenceGate>
+                                  <Root />
+                                </PersistenceGate>
+                              </StreakProvider>
+                            </DailyArchiveProvider>
+                          </DailyRoutineProvider>
                         </NotificationsProvider>
                       </SleepRitualProvider>
                     </SparkProvider>
                   </QuotesProvider>
-                </TodoProvider>
-              </MoodProvider>
+              </TodoProvider>
             </WaterProvider>
           </MissionsProvider>
         </ThemeProvider>

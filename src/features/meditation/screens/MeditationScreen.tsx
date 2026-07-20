@@ -20,7 +20,7 @@ function formatTime(totalSeconds: number) {
   return `${m}:${s.toString().padStart(2, '0')}`;
 }
 
-export function MeditationScreen({ onBack }: { onBack: () => void }) {
+export function MeditationScreen() {
   const { theme } = useAppTheme();
   const session = useMeditationSession();
   const { phase, scale, glow } = useBreathingCycle(session.status === 'running');
@@ -35,10 +35,7 @@ export function MeditationScreen({ onBack }: { onBack: () => void }) {
       <LinearGradient colors={theme.backgroundGradient} style={StyleSheet.absoluteFill} />
 
       <View style={styles.header}>
-        <IconButton onPress={onBack} backgroundColor={theme.surface}>
-          <Feather name="arrow-left" size={18} color={theme.textPrimary} />
-        </IconButton>
-        <View style={{ flex: 1, marginLeft: spacing.sm }}>
+        <View style={{ flex: 1 }}>
           <Greeting style={{ fontSize: 26, lineHeight: 32 }}>Meditate</Greeting>
         </View>
         {session.status !== 'setup' && (
@@ -57,7 +54,7 @@ export function MeditationScreen({ onBack }: { onBack: () => void }) {
               You sat with yourself for {session.minutes} minutes.
             </Caption>
             <View style={{ marginTop: spacing.lg, width: '100%' }}>
-              <PrimaryButton label="Done" onPress={onBack} />
+              <PrimaryButton label="Done" onPress={session.reset} />
             </View>
             <PetalConfetti visible />
           </View>

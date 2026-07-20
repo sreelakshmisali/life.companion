@@ -22,6 +22,7 @@ import { Mission } from '../types';
 import { computeMissionStats } from '../utils';
 import { MissionMonthGrid } from '../components/MissionMonthGrid';
 import { TAB_BAR_CLEARANCE } from '@/app/navigation/types';
+import { toDateKey } from '@/utils/date';
 
 function MissionRow({
   mission,
@@ -33,18 +34,21 @@ function MissionRow({
 }: {
   mission: Mission;
   onToggle: () => void;
-  onSave: (label: string) => void;
+  onSave: (title: string) => void;
   onDelete: () => void;
   expanded: boolean;
   onToggleExpand: () => void;
 }) {
   const { theme } = useAppTheme();
   const [editing, setEditing] = useState(false);
-  const [draft, setDraft] = useState(mission.label);
+  const [draft, setDraft] = useState(mission.title);
   const revealX = useRef(new Animated.Value(0)).current;
   const [revealed, setRevealed] = useState(false);
 
-  const stats = useMemo(() => computeMissionStats(mission.id, mission.done), [mission.id, mission.done]);
+  const todayKey = toDateKey(new Date());
+  const done = mission.completedDates.includes(todayKey);
+
+  const stats = useMemo(() => computeMissionStats(mission.completedDates), [mission.completedDates]);
 
   const toggleReveal = () => {
     const next = !revealed;
@@ -84,12 +88,12 @@ function MissionRow({
             style={[
               styles.checkbox,
               {
-                borderColor: mission.done ? theme.accent : theme.border,
-                backgroundColor: mission.done ? theme.accent : 'transparent',
+                borderColor: done ? theme.accent : theme.border,
+                backgroundColor: done ? theme.accent : 'transparent',
               },
             ]}
           >
-            {mission.done && <Feather name="check" size={14} color={theme.textOnAccent} />}
+            {done && <Feather name="check" size={14} color={theme.textOnAccent} />}
           </View>
         </Pressable>
 
@@ -108,10 +112,10 @@ function MissionRow({
         ) : (
           <Pressable style={{ flex: 1 }} onPress={() => setEditing(true)} onLongPress={toggleReveal}>
             <Body
-              style={{ textDecorationLine: mission.done ? 'line-through' : 'none' }}
-              color={mission.done ? theme.textSecondary : theme.textPrimary}
+              style={{ textDecorationLine: done ? 'line-through' : 'none' }}
+              color={done ? theme.textSecondary : theme.textPrimary}
             >
-              {mission.label}
+              {mission.title}
             </Body>
           </Pressable>
         )}
@@ -155,7 +159,8 @@ export function MissionsScreen({ onBack }: { onBack?: () => void }) {
   const [draft, setDraft] = useState('');
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  const doneCount = missions.filter((m) => m.done).length;
+  const todayKey = toDateKey(new Date());
+  const doneCount = missions.filter((m) => m.completedDates.includes(todayKey)).length;
 
   const submit = () => {
     if (!draft.trim()) return;
@@ -176,15 +181,13 @@ export function MissionsScreen({ onBack }: { onBack?: () => void }) {
         <View style={{ flex: 1 }}>
           <Greeting style={{ fontSize: 26, lineHeight: 32 }}>Your missions</Greeting>
           <Caption style={{ marginTop: 2 }}>
-            {doneCount} of {missions.length} done today
+            {missions.length === 0
+              ? 'Plant your first little habit below'
+              : `${doneCount} of ${missions.length} done today`}
           </Caption>
         </View>
       </View>
 
-      {/* KeyboardAvoidingView scoped to just the scroll + composer, below the
-          fixed header, so it only pushes up the content that actually needs
-          to move. 'height' on Android (not 'undefined') is what makes the
-          composer track the keyboard there — iOS uses 'padding' as usual. */}
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -197,7 +200,10 @@ export function MissionsScreen({ onBack }: { onBack?: () => void }) {
         >
           {missions.length === 0 ? (
             <Card>
-              <EmptyState message={"No missions yet.\nLet's plant your first little habit."} />
+              <EmptyState
+                emoji="🌱"
+                message={"No missions yet.\nLet's plant your first little habit."}
+              />
             </Card>
           ) : (
             <View style={{ gap: spacing.xs }}>
@@ -206,7 +212,7 @@ export function MissionsScreen({ onBack }: { onBack?: () => void }) {
                   key={m.id}
                   mission={m}
                   onToggle={() => toggleMission(m.id)}
-                  onSave={(label) => editMission(m.id, label)}
+                  onSave={(title) => editMission(m.id, title)}
                   onDelete={() => removeMission(m.id)}
                   expanded={expandedId === m.id}
                   onToggleExpand={() => setExpandedId((cur) => (cur === m.id ? null : m.id))}

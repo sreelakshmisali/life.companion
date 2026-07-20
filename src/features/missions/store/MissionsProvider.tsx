@@ -1,68 +1,65 @@
 import React, { createContext, useContext, useMemo, useState } from 'react';
-import { getLastNDays, toDateKey, getWeekdayLabel } from '@/utils/date';
-import { mockMissions, MOCK_PAST_ALL_MISSIONS_DONE } from '../constants';
-import { Mission, MissionDayEntry } from '../types';
+import { toDateKey } from '@/utils/date';
+import { Mission } from '../types';
 
 interface MissionsContextValue {
   missions: Mission[];
+  /** Toggle today's completion on/off for a mission. */
   toggleMission: (id: string) => void;
-  addMission: (label: string) => void;
-  editMission: (id: string, label: string) => void;
+  addMission: (title: string) => void;
+  editMission: (id: string, title: string) => void;
   removeMission: (id: string) => void;
   replaceAll: (missions: Mission[]) => void;
-  weekHistory: MissionDayEntry[];
-  currentStreak: number;
+  /** Whether every mission is completed today. */
+  allDoneToday: boolean;
 }
 
 const MissionsContext = createContext<MissionsContextValue | undefined>(undefined);
 
 export function MissionsProvider({ children }: { children: React.ReactNode }) {
-  const [missions, setMissions] = useState<Mission[]>(mockMissions);
+  const [missions, setMissions] = useState<Mission[]>([]);
 
   const value = useMemo<MissionsContextValue>(() => {
-    const todayAllDone = missions.length > 0 && missions.every((m) => m.done);
+    const todayKey = toDateKey(new Date());
 
-    const days = getLastNDays(7); // includes today, oldest first
-    const weekHistory: MissionDayEntry[] = days.map((d, i) => {
-      const isToday = i === days.length - 1;
-      return {
-        dateKey: toDateKey(d),
-        label: getWeekdayLabel(d),
-        allDone: isToday ? todayAllDone : MOCK_PAST_ALL_MISSIONS_DONE[i] ?? false,
-        isToday,
-      };
-    });
-
-    // Consecutive fully-completed days, most recent first. Today doesn't
-    // break the streak until it's actually incomplete at day's end.
-    let currentStreak = 0;
-    for (let i = weekHistory.length - 1; i >= 0; i--) {
-      const day = weekHistory[i];
-      if (day.allDone) {
-        currentStreak += 1;
-      } else if (!day.isToday) {
-        break;
-      }
-    }
+    const allDoneToday = missions.length > 0 && missions.every((m) => m.completedDates.includes(todayKey));
 
     return {
       missions,
       toggleMission: (id: string) =>
-        setMissions((prev) => prev.map((m) => (m.id === id ? { ...m, done: !m.done } : m))),
-      addMission: (label: string) => {
-        const trimmed = label.trim();
+        setMissions((prev) =>
+          prev.map((m) => {
+            if (m.id !== id) return m;
+            const already = m.completedDates.includes(todayKey);
+            return {
+              ...m,
+              completedDates: already
+                ? m.completedDates.filter((d) => d !== todayKey)
+                : [...m.completedDates, todayKey],
+            };
+          })
+        ),
+      addMission: (title: string) => {
+        const trimmed = title.trim();
         if (!trimmed) return;
-        setMissions((prev) => [...prev, { id: Date.now().toString(), label: trimmed, done: false }]);
+        setMissions((prev) => [
+          ...prev,
+          {
+            id: Date.now().toString(),
+            title: trimmed,
+            createdAt: todayKey,
+            completedDates: [],
+          },
+        ]);
       },
-      editMission: (id: string, label: string) => {
-        const trimmed = label.trim();
+      editMission: (id: string, title: string) => {
+        const trimmed = title.trim();
         if (!trimmed) return;
-        setMissions((prev) => prev.map((m) => (m.id === id ? { ...m, label: trimmed } : m)));
+        setMissions((prev) => prev.map((m) => (m.id === id ? { ...m, title: trimmed } : m)));
       },
       removeMission: (id: string) => setMissions((prev) => prev.filter((m) => m.id !== id)),
       replaceAll: (next: Mission[]) => setMissions(next),
-      weekHistory,
-      currentStreak,
+      allDoneToday,
     };
   }, [missions]);
 

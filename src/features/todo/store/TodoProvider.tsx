@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useMemo, useState } from 'react';
-import { MOCK_TODOS } from '../constants';
 import { TodoItem, TodoPriority } from '../types';
 
 interface TodoContextValue {
@@ -17,7 +16,7 @@ interface TodoContextValue {
 const TodoContext = createContext<TodoContextValue | undefined>(undefined);
 
 export function TodoProvider({ children }: { children: React.ReactNode }) {
-  const [todos, setTodos] = useState<TodoItem[]>(MOCK_TODOS);
+  const [todos, setTodos] = useState<TodoItem[]>([]);
 
   const value = useMemo<TodoContextValue>(() => {
     // Newest first within each group; open tasks surface above done ones.

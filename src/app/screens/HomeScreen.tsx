@@ -1,18 +1,15 @@
 import React from 'react';
-import { View, ScrollView, StyleSheet, Animated } from 'react-native';
+import { View, ScrollView, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAppTheme } from '@/theme/ThemeProvider';
 import { spacing } from '@/theme/tokens';
 import { HomeSkyAccent } from '@/components/common/HomeSkyAccent';
 import { Greeting, Subtitle, Caption } from '@/components/common/Type';
-import { WeatherChip } from '@/components/common/WeatherChip';
 import { MissionsCard } from '@/features/missions/components/MissionsCard';
 import { StreakCard } from '@/features/missions/components/StreakCard';
 import { useMissions } from '@/features/missions/store/MissionsProvider';
 import { WaterTracker } from '@/features/water/components/WaterTracker';
 import { useWater } from '@/features/water/store/WaterProvider';
-import { MoodPicker } from '@/features/mood/components/MoodPicker';
-import { useMood } from '@/features/mood/store/MoodProvider';
 import { DailySparkCard } from '@/features/spark/components/DailySparkCard';
 import { useSpark } from '@/features/spark/store/SparkProvider';
 import { QuoteChip } from '@/features/quotes/components/QuoteChip';
@@ -23,26 +20,25 @@ import { TodoCard } from '@/features/todo/components/TodoCard';
 import { useTodos } from '@/features/todo/store/TodoProvider';
 import { SleepRitualCard } from '@/features/sleep/components/SleepRitualCard';
 import { useSleepRitual } from '@/features/sleep/store/SleepRitualProvider';
-import { OnThisDayCard } from '@/features/onThisDay/components/OnThisDayCard';
 import { TAB_BAR_CLEARANCE } from '../navigation/types';
+
+import { useStreak } from '@/features/streak/store/StreakProvider';
 
 export function HomeScreen({
   onOpenMissions,
   onOpenMeditation,
-  onOpenInsights,
   onOpenTodos,
-  onOpenOnThisDay,
+  onOpenSettings,
 }: {
   onOpenMissions: () => void;
   onOpenMeditation: () => void;
-  onOpenInsights: () => void;
   onOpenTodos: () => void;
-  onOpenOnThisDay: () => void;
+  onOpenSettings: () => void;
 }) {
   const { theme } = useAppTheme();
-  const { missions, toggleMission, currentStreak } = useMissions();
+  const { missions, toggleMission } = useMissions();
+  const { currentStreak } = useStreak();
   const water = useWater();
-  const mood = useMood();
   const { todos, activeTodos, toggleTodo } = useTodos();
   const { quoteOfTheDay } = useQuotes();
   const sleep = useSleepRitual();
@@ -51,8 +47,6 @@ export function HomeScreen({
   const today = new Date();
   const hour = today.getHours();
   const greeting = getGreeting(hour);
-  const isEvening = hour >= 18;
-  const moodPeriod = isEvening ? 'night' : 'morning';
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.background }}>
@@ -63,10 +57,6 @@ export function HomeScreen({
         contentContainerStyle={[styles.scroll, { paddingBottom: TAB_BAR_CLEARANCE }]}
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.topRow}>
-          <WeatherChip temp="22°" condition="cloudy" />
-        </View>
-
         <View style={styles.greetingBlock}>
           <Caption>{getFormattedDate(today)}</Caption>
           <Greeting style={{ marginTop: 4 }}>{greeting} ☀️</Greeting>
@@ -77,7 +67,7 @@ export function HomeScreen({
         </View>
 
         <View style={styles.stack}>
-          <StreakCard streakDays={currentStreak} weeklyGoal={7} />
+          <StreakCard onOpenSettings={onOpenSettings} />
           <MeditationCard onPress={onOpenMeditation} />
           <MissionsCard missions={missions} onToggle={toggleMission} onSeeAll={onOpenMissions} />
           <TodoCard activeTodos={activeTodos} totalCount={todos.length} onToggle={toggleTodo} onSeeAll={onOpenTodos} />
@@ -86,29 +76,21 @@ export function HomeScreen({
             goal={water.goal}
             onAdd={water.addCup}
             onRemove={water.removeCup}
-            onSeeAll={onOpenInsights}
+            onSetGoal={water.setGoal}
+            weekHistory={water.weekHistory}
           />
-          <MoodPicker
-            period={moodPeriod}
-            selected={moodPeriod === 'night' ? mood.nightMood : mood.morningMood}
-            onSelect={(id) => mood.setMood(moodPeriod, id)}
-            onSeeAll={onOpenInsights}
+          <SleepRitualCard
+            checklist={sleep.checklist}
+            completedTonight={sleep.completedTonight}
+            onToggleItem={sleep.toggleTonightItem}
+            weekHistory={sleep.weekHistory}
           />
-          {isEvening && (
-            <SleepRitualCard
-              checklist={sleep.checklist}
-              completedTonight={sleep.completedTonight}
-              onToggleItem={sleep.toggleTonightItem}
-              currentStreak={sleep.currentStreak}
-            />
-          )}
           <DailySparkCard
             todaysSpark={spark.todaysSpark}
             canReroll={spark.canReroll}
             onReroll={spark.reroll}
             ideas={spark.ideas}
           />
-          <OnThisDayCard onSeeAll={onOpenOnThisDay} />
         </View>
       </ScrollView>
     </View>
@@ -120,10 +102,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.sm,
     paddingTop: spacing.xl,
     paddingBottom: spacing.xl,
-  },
-  topRow: {
-    alignItems: 'flex-end',
-    marginBottom: spacing.sm,
   },
   greetingBlock: {
     marginTop: spacing.md,
