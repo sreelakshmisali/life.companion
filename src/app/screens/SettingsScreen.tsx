@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, ScrollView, StyleSheet, Pressable, Alert } from 'react-native';
+import { View, ScrollView, StyleSheet, Pressable, Alert, Linking } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Feather } from '@expo/vector-icons';
 import { useAppTheme } from '@/theme/ThemeProvider';
@@ -11,6 +11,7 @@ import { EditableTextList } from '@/components/common/EditableTextList';
 import { ConfirmModal } from '@/components/modals/ConfirmModal';
 import { PrimaryButton } from '@/components/buttons/PrimaryButton';
 import { ThemePicker } from '@/theme/components/ThemePicker';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { APP_NAME, APP_VERSION } from '@/constants/app';
 import { TAB_BAR_CLEARANCE } from '../navigation/types';
 
@@ -63,6 +64,41 @@ function ToggleRow({ label, value, onChange, disabled }: { label: string; value:
     <View style={styles.toggleRow}>
       <Body style={{ flex: 1 }}>{label}</Body>
       <Toggle value={value} onChange={onChange} disabled={disabled} />
+    </View>
+  );
+}
+
+function TimePickerRow({ label, timeHHMM, onChange, disabled }: { label: string; timeHHMM: string; onChange: (v: string) => void; disabled?: boolean }) {
+  const { theme } = useAppTheme();
+  const [show, setShow] = useState(false);
+
+  const [h, m] = timeHHMM.split(':').map(Number);
+  const d = new Date();
+  d.setHours(h, m, 0, 0);
+
+  const displayTime = d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+
+  return (
+    <View style={styles.timeRow}>
+      <Caption style={{ flex: 1 }}>{label}</Caption>
+      <Pressable onPress={() => !disabled && setShow(true)} style={[styles.timeChip, { backgroundColor: disabled ? theme.surfaceAlt : theme.surface }]}>
+        <Body style={{ opacity: disabled ? 0.5 : 1 }}>{displayTime}</Body>
+      </Pressable>
+      {show && (
+        <DateTimePicker
+          value={d}
+          mode="time"
+          display="default"
+          onChange={(event, date) => {
+            setShow(false);
+            if (date) {
+              const hh = date.getHours().toString().padStart(2, '0');
+              const mm = date.getMinutes().toString().padStart(2, '0');
+              onChange(`${hh}:${mm}`);
+            }
+          }}
+        />
+      )}
     </View>
   );
 }
@@ -134,13 +170,39 @@ export function SettingsScreen() {
             <ToggleRow label="Sleep Ritual" value={dailyRoutine.sleepEnabled} onChange={dailyRoutine.setSleepEnabled} />
           </Section>
 
-          <Section icon="bell" title="Notifications" subtitle="Preferences for now — real reminders are coming soon">
-            <ToggleRow label="All notifications" value={notifications.allEnabled} onChange={notifications.setAllEnabled} />
-            <View style={[styles.divider, { backgroundColor: theme.border }]} />
-            <ToggleRow label="Daily mission reminders" value={notifications.missionsEnabled} onChange={notifications.setMissionsEnabled} />
-            <ToggleRow label="Water reminders" value={notifications.waterEnabled} onChange={notifications.setWaterEnabled} />
-            <ToggleRow label="Meditation reminders" value={notifications.meditationEnabled} onChange={notifications.setMeditationEnabled} />
-            <ToggleRow label="Sleep ritual reminders" value={notifications.sleepEnabled} onChange={notifications.setSleepEnabled} />
+          <Section icon="bell" title="Notifications" subtitle="Gentle reminders throughout your day">
+            <ToggleRow label="Enable Notifications" value={notifications.allEnabled} onChange={(v) => notifications.setPref('allEnabled', v)} />
+            
+            {notifications.allEnabled && !notifications.systemPermissionEnabled && (
+              <View style={[styles.warningBanner, { backgroundColor: theme.accentSoft }]}>
+                <Caption color={theme.accent}>⚠️ Permission disabled in system settings</Caption>
+                <Pressable onPress={() => Linking.openSettings()} style={{ marginTop: spacing.xs }}>
+                  <Caption color={theme.accent} style={{ textDecorationLine: 'underline' }}>Open Settings</Caption>
+                </Pressable>
+              </View>
+            )}
+
+            <View style={[styles.divider, { backgroundColor: theme.border, marginTop: spacing.sm, marginBottom: spacing.md }]} />
+            
+            <ToggleRow label="Morning Reminder" value={notifications.morningEnabled} onChange={(v) => notifications.setPref('morningEnabled', v)} disabled={!notifications.allEnabled} />
+            <TimePickerRow label="Time" timeHHMM={notifications.morningTime} onChange={(v) => notifications.setPref('morningTime', v)} disabled={!notifications.allEnabled || !notifications.morningEnabled} />
+            <View style={[styles.divider, { backgroundColor: theme.border, marginVertical: spacing.sm }]} />
+
+            <ToggleRow label="Water Reminders" value={notifications.waterEnabled} onChange={(v) => notifications.setPref('waterEnabled', v)} disabled={!notifications.allEnabled} />
+            <TimePickerRow label="Start Time" timeHHMM={notifications.waterStartTime} onChange={(v) => notifications.setPref('waterStartTime', v)} disabled={!notifications.allEnabled || !notifications.waterEnabled} />
+            <TimePickerRow label="End Time" timeHHMM={notifications.waterEndTime} onChange={(v) => notifications.setPref('waterEndTime', v)} disabled={!notifications.allEnabled || !notifications.waterEnabled} />
+            <View style={[styles.divider, { backgroundColor: theme.border, marginVertical: spacing.sm }]} />
+
+            <ToggleRow label="Mission Reminder" value={notifications.missionsEnabled} onChange={(v) => notifications.setPref('missionsEnabled', v)} disabled={!notifications.allEnabled} />
+            <TimePickerRow label="Time" timeHHMM={notifications.missionsTime} onChange={(v) => notifications.setPref('missionsTime', v)} disabled={!notifications.allEnabled || !notifications.missionsEnabled} />
+            <View style={[styles.divider, { backgroundColor: theme.border, marginVertical: spacing.sm }]} />
+
+            <ToggleRow label="Sleep Reminder" value={notifications.sleepEnabled} onChange={(v) => notifications.setPref('sleepEnabled', v)} disabled={!notifications.allEnabled} />
+            <TimePickerRow label="Time" timeHHMM={notifications.sleepTime} onChange={(v) => notifications.setPref('sleepTime', v)} disabled={!notifications.allEnabled || !notifications.sleepEnabled} />
+            <View style={[styles.divider, { backgroundColor: theme.border, marginVertical: spacing.sm }]} />
+
+            <ToggleRow label="Streak Protection" value={notifications.streakEnabled} onChange={(v) => notifications.setPref('streakEnabled', v)} disabled={!notifications.allEnabled} />
+            <TimePickerRow label="Time" timeHHMM={notifications.streakTime} onChange={(v) => notifications.setPref('streakTime', v)} disabled={!notifications.allEnabled || !notifications.streakEnabled} />
           </Section>
 
           <Section icon="message-circle" title="Quotes" subtitle="Manually added by you — no online quote API">
@@ -281,5 +343,22 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: radius.pill,
     borderWidth: 1.5,
+  },
+  timeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 4,
+    paddingLeft: spacing.md,
+  },
+  timeChip: {
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 6,
+    borderRadius: radius.sm,
+  },
+  warningBanner: {
+    padding: spacing.sm,
+    borderRadius: radius.sm,
+    marginTop: spacing.xs,
+    alignItems: 'flex-start',
   },
 });

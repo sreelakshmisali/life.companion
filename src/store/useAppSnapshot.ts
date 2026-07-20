@@ -7,7 +7,7 @@ import { useTodos } from '@/features/todo/store/TodoProvider';
 import { useQuotes } from '@/features/quotes/store/QuotesProvider';
 import { useSpark } from '@/features/spark/store/SparkProvider';
 import { useSleepRitual } from '@/features/sleep/store/SleepRitualProvider';
-import { useNotificationPrefs } from '@/features/notifications/store/NotificationsProvider';
+import { useNotificationPrefs, DEFAULT_NOTIFICATION_PREFS } from '@/features/notifications/store/NotificationsProvider';
 import { useDailyArchive } from '@/features/onThisDay/store/DailyArchiveProvider';
 import { useDailyRoutine } from '@/features/settings/store/DailyRoutineProvider';
 import { toDateKey } from '@/utils/date';
@@ -53,10 +53,18 @@ export function useAppSnapshot() {
       sleepChecklist: sleep.checklist,
       sleepCompletedTonight: sleep.completedTonight,
       notifications: {
-        missionsEnabled: notifications.missionsEnabled,
+        allEnabled: notifications.allEnabled,
+        morningEnabled: notifications.morningEnabled,
+        morningTime: notifications.morningTime,
         waterEnabled: notifications.waterEnabled,
-        meditationEnabled: notifications.meditationEnabled,
+        waterStartTime: notifications.waterStartTime,
+        waterEndTime: notifications.waterEndTime,
+        missionsEnabled: notifications.missionsEnabled,
+        missionsTime: notifications.missionsTime,
         sleepEnabled: notifications.sleepEnabled,
+        sleepTime: notifications.sleepTime,
+        streakEnabled: notifications.streakEnabled,
+        streakTime: notifications.streakTime,
       },
       dailyArchive: dailyArchive.archive,
       dailyRoutine: {
@@ -79,10 +87,18 @@ export function useAppSnapshot() {
       spark.rerolledIdeaId,
       sleep.checklist,
       sleep.completedTonight,
-      notifications.missionsEnabled,
+      notifications.allEnabled,
+      notifications.morningEnabled,
+      notifications.morningTime,
       notifications.waterEnabled,
-      notifications.meditationEnabled,
+      notifications.waterStartTime,
+      notifications.waterEndTime,
+      notifications.missionsEnabled,
+      notifications.missionsTime,
       notifications.sleepEnabled,
+      notifications.sleepTime,
+      notifications.streakEnabled,
+      notifications.streakTime,
       dailyArchive.archive,
       dailyRoutine.missionsEnabled,
       dailyRoutine.waterEnabled,
@@ -126,12 +142,7 @@ export function useAppSnapshot() {
     spark.replaceRerollState(null);
     sleep.replaceAll([]);
     sleep.replaceCompletedTonight([]);
-    notifications.replaceAll({
-      missionsEnabled: true,
-      waterEnabled: true,
-      meditationEnabled: true,
-      sleepEnabled: true,
-    });
+    notifications.replaceAll(DEFAULT_NOTIFICATION_PREFS);
     dailyArchive.replaceArchive({});
     dailyRoutine.replaceAll({
       missionsEnabled: true,

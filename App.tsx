@@ -99,17 +99,17 @@ export default function App() {
                   <QuotesProvider>
                     <SparkProvider>
                       <SleepRitualProvider>
-                        <NotificationsProvider>
-                          <DailyRoutineProvider>
-                            <DailyArchiveProvider>
-                              <StreakProvider>
+                        <DailyRoutineProvider>
+                          <DailyArchiveProvider>
+                            <StreakProvider>
+                              <NotificationsProvider>
                                 <PersistenceGate>
                                   <Root />
                                 </PersistenceGate>
-                              </StreakProvider>
-                            </DailyArchiveProvider>
-                          </DailyRoutineProvider>
-                        </NotificationsProvider>
+                              </NotificationsProvider>
+                            </StreakProvider>
+                          </DailyArchiveProvider>
+                        </DailyRoutineProvider>
                       </SleepRitualProvider>
                     </SparkProvider>
                   </QuotesProvider>

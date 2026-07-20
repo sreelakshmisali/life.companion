@@ -5,15 +5,36 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
+    "icon": "./assets/icon.png",
     "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
       "backgroundColor": "#FDFBF6"
     },
-    "assetBundlePatterns": ["**/*"],
-    "ios": { "supportsTablet": true },
-    "android": {
-      "adaptiveIcon": { "backgroundColor": "#FDFBF6" },
-      "softwareKeyboardLayoutMode": "resize"
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true
     },
-    "web": { "bundler": "metro" }
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#FDFBF6"
+      },
+      "softwareKeyboardLayoutMode": "resize",
+      "package": "com.cozydevaccound.cozyjournal"
+    },
+    "web": {
+      "bundler": "metro"
+    },
+    "plugins": [
+      "@react-native-community/datetimepicker"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "335a2eb6-8eb0-4353-a3fc-3c5d872ad4c3"
+      }
+    }
   }
 }
