@@ -3,7 +3,7 @@ import { View, ScrollView, StyleSheet, Animated } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAppTheme } from '@/theme/ThemeProvider';
 import { spacing } from '@/theme/tokens';
-import { AmbientOrb } from '@/components/common/AmbientOrb';
+import { HomeSkyAccent } from '@/components/common/HomeSkyAccent';
 import { Greeting, Subtitle, Caption } from '@/components/common/Type';
 import { WeatherChip } from '@/components/common/WeatherChip';
 import { MissionsCard } from '@/features/missions/components/MissionsCard';
@@ -57,7 +57,7 @@ export function HomeScreen({
   return (
     <View style={{ flex: 1, backgroundColor: theme.background }}>
       <LinearGradient colors={theme.backgroundGradient} style={StyleSheet.absoluteFill} />
-      <AmbientOrb />
+      <HomeSkyAccent />
 
       <ScrollView
         contentContainerStyle={[styles.scroll, { paddingBottom: TAB_BAR_CLEARANCE }]}
